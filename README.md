@@ -14,7 +14,7 @@ If you don't need Liteserver, then remove -e "LITESERVER=true".
 #### Use
 ```docker exec -ti <container-id> /bin/bash```
 
-```./validator-engine-console -k client -p server.pub -a <IP>:<TCP-PORT1>```
+```validator-engine-console -k client -p server.pub -a <IP>:<TCP-PORT1>```
 
 IP:PORT is shown at start of container.
 
