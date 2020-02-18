@@ -1,12 +1,12 @@
-# Telegram Open Network Node
-Dockerfile for Telegram Open Network Node
+# Telegram Open Network Private Testnet
+Dockerfile for running private TON testnet
 
 #### Install
-```docker pull it4addict/ton-node```
+```docker pull kaemel/ton-private-net```
 #### Create volume
 ```docker volume create ton-db```
 #### Run
-```docker run -d --name ton-node --mount source=ton-db,target=/var/ton-work/db --network host -e "PUBLIC_IP=<YOUR_PUBLIC_IP>" -e "PUBLIC_PORT=<PUBLIC_PORT_FOR_P2P>" -e "CONSOLE_PORT=<TCP-PORT1>" -e "LITESERVER=true" -e "LITE_PORT=<TCP-PORT2>" -it it4addict/ton-node```
+```docker run -d --name ton-node --mount source=ton-db,target=/var/ton-work/db --network host -e "PUBLIC_IP=<YOUR_PUBLIC_IP>" -e "PUBLIC_PORT=<PUBLIC_PORT_FOR_P2P>" -e "CONSOLE_PORT=<TCP-PORT1>" -e "LITESERVER=true" -e "LITE_PORT=<TCP-PORT2>" -it kaemel/ton-private-net```
 
 
 If you don't need Liteserver, then remove -e "LITESERVER=true".
