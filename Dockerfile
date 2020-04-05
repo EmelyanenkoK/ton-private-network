@@ -38,7 +38,7 @@ COPY --from=builder /ton/build/crypto/create-state /var/ton-work/contracts
 
 RUN mkdir -p /var/ton-work/db/keyring
 WORKDIR /var/ton-work/contracts
-COPY gen-zerostate-no-basechain.fif ./
+COPY gen-zerostate.fif ./
 WORKDIR /var/ton-work/db
 COPY ton-private-testnet.config.json.template node_init.sh control.template prepare_network.sh init.sh clean_all.sh ./
 RUN chmod +x node_init.sh prepare_network.sh init.sh clean_all.sh

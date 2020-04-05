@@ -8,9 +8,12 @@ echo "Validator key short_id "$VAL_ID_HEX
 export VAL_ID_HEX=$VAL_ID_HEX
 mv validator-keys.pub ../../contracts
 cd ../../contracts
-./create-state gen-zerostate-no-basechain.fif
+./create-state gen-zerostate.fif
 ZEROSTATE_FILEHASH=$(sed ':a;N;$!ba;s/\n//g' <<<$(sed -e "s/\s//g" <<<"$(od -An -t x1 zerostate.fhash)") | awk '{ print toupper($0) }')
 mv zerostate.boc ../db/static/$ZEROSTATE_FILEHASH
+BASESTATE0_FILEHASH=$(sed ':a;N;$!ba;s/\n//g' <<<$(sed -e "s/\s//g" <<<"$(od -An -t x1 basestate0.fhash)") | awk '{ print toupper($0) }')
+mkdir ../db/import
+mv basestate0.boc ../db/static/$BASESTATE0_FILEHASH
 cd ../db
 sed -e "s#ROOT_HASH#$(cat ../contracts/zerostate.rhash | base64)#g" -e "s#FILE_HASH#$(cat ../contracts/zerostate.fhash | base64)#g" ton-private-testnet.config.json.template > my-ton-global.config.json
 IP=$PUBLIC_IP; IPNUM=0; for (( i=0 ; i<4 ; ++i )); do ((IPNUM=$IPNUM+${IP%%.*}*$((256**$((3-${i})))))); IP=${IP#*.}; done
