@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+    genesis:
+        container_name: genesis
+        image: ton-private-network
+        environment:
+            - PUBLIC_IP=172.28.1.1
+            - CONSOLE_PORT=4444
+            - PUBLIC_PORT=4444
+            - GENESIS=1
+            - DHT_PORT=6302
+        networks:
+            testing_net:
+                ipv4_address: 172.28.1.1
+
+    node_2:
+        container_name: node_2
+        image: ton-private-network
+        environment:
+            - PUBLIC_IP=172.28.1.2
+            - CONSOLE_PORT=4444
+            - PUBLIC_PORT=4444
+            - CONFIG=genesis:8000/my-ton-global.config.json
+        depends_on:
+            - genesis
+        networks:
+            testing_net:
+                ipv4_address: 172.28.1.2
+
+    node_3:
+        container_name: node_3
+        image: ton-private-network
+        environment:
+            - PUBLIC_IP=172.28.1.3
+            - CONSOLE_PORT=4444
+            - PUBLIC_PORT=4444
+            - CONFIG=genesis:8000/my-ton-global.config.json
+        depends_on:
+            - genesis
+        networks:
+            testing_net:
+                ipv4_address: 172.28.1.3
+
+networks:
+    testing_net:
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.28.0.0/16

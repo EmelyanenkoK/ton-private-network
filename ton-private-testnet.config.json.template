@@ -2,8 +2,8 @@
   "@type": "config.global",
   "dht": {
     "@type": "dht.config.global",
-    "k": 1,
-    "a": 1,
+    "k": 3,
+    "a": 3,
     "static_nodes": {
       "@type": "dht.nodes",
       "nodes": [NODES]
