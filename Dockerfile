@@ -15,7 +15,7 @@ RUN mkdir build && \
 
 FROM ubuntu:18.04
 RUN apt-get update && \
-	apt-get install -y openssl wget&& \
+	apt-get install -y openssl wget python&& \
 	rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /var/ton-work/db && \
 	mkdir -p /var/ton-work/db/static
@@ -34,13 +34,13 @@ COPY --from=builder /ton/crypto/fift/lib /usr/local/lib/fift
 RUN mkdir /var/ton-work/contracts
 COPY --from=builder /ton/crypto/smartcont /var/ton-work/contracts
 COPY --from=builder /ton/build/crypto/create-state /var/ton-work/contracts
-
+COPY --from=builder /ton/build/dht-server/dht-server /usr/local/bin
 
 RUN mkdir -p /var/ton-work/db/keyring
 WORKDIR /var/ton-work/contracts
 COPY gen-zerostate.fif ./
 WORKDIR /var/ton-work/db
-COPY ton-private-testnet.config.json.template node_init.sh control.template prepare_network.sh init.sh clean_all.sh ./
+COPY ton-private-testnet.config.json.template node_init.sh control.template prepare_network.sh init.sh clean_all.sh example.config.json ./
 RUN chmod +x node_init.sh prepare_network.sh init.sh clean_all.sh
 
 ENTRYPOINT ["/var/ton-work/db/init.sh"]
