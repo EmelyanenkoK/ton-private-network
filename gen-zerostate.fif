@@ -135,7 +135,7 @@ Masterchain swap
 // version capabilities
 1 capCreateStats capBounceMsgBody or capReportVersion or config.version!
 // max-validators max-main-validators min-validators
-1000 100 3 config.validator_num!
+1000 100 1 config.validator_num!
 // min-stake max-stake min-total-stake max-factor
 GR$10000 GR$10000000 GR$500000 sg~3 config.validator_stake_limits!
 // elected-for elect-start-before elect-end-before stakes-frozen-for
