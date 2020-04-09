@@ -23,8 +23,8 @@ IP=$PUBLIC_IP; IPNUM=0; for (( i=0 ; i<4 ; ++i )); do ((IPNUM=$IPNUM+${IP%%.*}*$
 mkdir dht-server
 cd dht-server
 cp ../my-ton-global.config.json .
-wget https://test.ton.org/ton-global.config.json
-dht-server -C ton-global.config.json -D . -I "$PUBLIC_IP:$DHT_PORT"
+cp ../example.config.json .
+dht-server -C example.config.json -D . -I "$PUBLIC_IP:$DHT_PORT"
 
 DHT_NODES=$(generate-random-id -m dht -k keyring/* -a "{
              \"@type\": \"adnl.addressList\",
@@ -43,11 +43,6 @@ DHT_NODES=$(generate-random-id -m dht -k keyring/* -a "{
 
 sed -i -e "s#NODES#$(printf "%q" $DHT_NODES)#g" my-ton-global.config.json
 cp my-ton-global.config.json ..
-#mkdir dht-server
-#cd dht-server
-#cp ../my-ton-global.config.json .
-#cp ../keyring/* keyring
-#dht-server -C my-ton-global.config.json -D . -I "$PUBLIC_IP:$DHT_PORT"
 dht-server -C my-ton-global.config.json -D . -I "$PUBLIC_IP:$DHT_PORT"&
 cd ..
 ./node_init.sh

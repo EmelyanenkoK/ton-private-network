@@ -40,7 +40,7 @@ RUN mkdir -p /var/ton-work/db/keyring
 WORKDIR /var/ton-work/contracts
 COPY gen-zerostate.fif ./
 WORKDIR /var/ton-work/db
-COPY ton-private-testnet.config.json.template node_init.sh control.template prepare_network.sh init.sh clean_all.sh ./
+COPY ton-private-testnet.config.json.template node_init.sh control.template prepare_network.sh init.sh clean_all.sh example.config.json ./
 RUN chmod +x node_init.sh prepare_network.sh init.sh clean_all.sh
 
 ENTRYPOINT ["/var/ton-work/db/init.sh"]
