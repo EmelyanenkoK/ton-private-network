@@ -68,31 +68,6 @@ Masterchain over
 2dup ."wallet address = " .addr cr 2dup 6 .Addr cr
 "main-wallet" +suffix +".addr" save-address-verbose
 
-// SmartContract #2 (Simple money giver for test network)
-<{ SETCP0 DUP IFNOTRET // return if recv_internal
-   DUP 85143 INT EQUAL IFJMP:<{    // "seqno" get-method
-     DROP c4 PUSHCTR CTOS 32 PLDU  // cnt
-   }>
-   INC 32 THROWIF    // fail unless recv_external
-   32 LDU SWAP                         // cs cnt
-   c4 PUSHCTR CTOS 32 LDU ENDS         // cs cnt cnt'
-   TUCK EQUAL 33 THROWIFNOT            // ( seqno mismatch? )
-   ACCEPT                              // cs cnt'
-   SWAP 8 LDU LDREF ENDS               // cnt'' mode msg
-   GR$20 INT 3 INT RAWRESERVE          // reserve all but 20 Grams from the balance
-   SWAP SENDRAWMSG
-   INC NEWC 32 STU ENDC c4 POPCTR      // store cnt''
-}>c
-// code
-<b 0 32 u, b> // data
-empty_cell    // libraries
-GR$1000       // initial balance (1k test Grams)
-0 0 AllOnes 6 * 6 register_smc
-dup make_special dup constant smc2_addr
-Masterchain over 
-2dup ."free test gram giver address = " .addr cr 2dup 6 .Addr cr
-"testgiver" +suffix +".addr" save-address-verbose
-
 // SmartContract #3
 PROGRAM{
   recv_internal x{} PROC
@@ -124,13 +99,14 @@ Libs{
   x{ABACABADABACABA} s>c public_lib
   x{1234} x{5678} |_ s>c public_lib
 }Libs  // libraries
-GR$666 // balance
+GR$1 // balance
 0 // split_depth
 3 // ticktock: tick
 2 // mode: create
 register_smc
 dup make_special dup constant smc3_addr
 ."address = " 64x. cr
+
 
 /*
  *
@@ -165,8 +141,8 @@ Masterchain swap
 GR$10000 GR$10000000 GR$500000 sg~3 config.validator_stake_limits!
 // elected-for elect-start-before elect-end-before stakes-frozen-for
 // 400000 200000 4000 400000 config.election_params!
-// 4000 2000 500 1000 config.election_params!  // DEBUG
-65536 32768 8192 32768 config.election_params!  // TestNet DEBUG
+4000 2000 500 1000 config.election_params!  // DEBUG
+// 65536 32768 8192 32768 config.election_params!  // TestNet DEBUG
 // config-addr = -1:5555...5555
 AllOnes 5 * constant config_addr
 config_addr config.config_smc!
@@ -220,7 +196,7 @@ GR$100 1 500 config.complaint_prices!
 // 17 add-validator
 // newkeypair nip dup ."Validator #2 public key = " Bx. cr
 // 239 add-validator
-100000 =: orig_vset_valid_for  // original validator set valid 100000 seconds
+2000 =: orig_vset_valid_for  // original validator set valid 2000 seconds
 now dup orig_vset_valid_for + 0 config.validators!
 
 /*
@@ -243,16 +219,6 @@ Masterchain swap
 ."config smart contract address = " 2dup .addr cr 2dup 7 .Addr cr
 "config-master" +suffix +".addr" save-address-verbose
 // Other data
-
-/*
- *
- *  Initial wallets (test)
- *
- */
- 
-// pubkey amount `create-wallet1` or pubkey amount `create-wallet2`
-PK'PuZPPXK5Rff9SvtoS7Y9lUuEixvy-J6aishYFj3Qn6P0pJMb GR$1000000000 create-wallet1
-PK'PuYiB1zAWzr4p8j6I681+sGUrRGcn6Ylf7vXl0xaUl/w6Xfg GR$1700000000 create-wallet0
 
 /*
  *
