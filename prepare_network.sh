@@ -64,10 +64,7 @@ echo | validator-engine-console -k client -p server.pub -v 0 -a "$PUBLIC_IP:$CON
 kill $PRELIMINARY_VALIDATOR_RUN;
 else
   sleep 10
-  wget ${CONFIG}
-  head -n -10 my-ton-global.config.json > tmp.config
-  mv tmp.config my-ton-global.config.json
-  echo "}}}" >> my-ton-global.config.json
+  wget -O my-ton-global.config.json ${CONFIG}
   cat my-ton-global.config.json
   ./node_init.sh
 
