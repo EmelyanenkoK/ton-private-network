@@ -64,11 +64,37 @@ echo | validator-engine-console -k client -p server.pub -v 0 -a "$PUBLIC_IP:$CON
 kill $PRELIMINARY_VALIDATOR_RUN;
 else
   sleep 10
-  wget ${CONFIG}
-  head -n -10 my-ton-global.config.json > tmp.config
-  mv tmp.config my-ton-global.config.json
-  echo "}}}" >> my-ton-global.config.json
+  wget -O my-ton-global.config.json ${CONFIG}
   cat my-ton-global.config.json
   ./node_init.sh
 
 fi
+
+# Liteserver
+if [ -z "$LITESERVER" ]; then
+    echo -e "\e[1;33m[=]\e[0m Liteserver disabled"
+else
+    if [ -f "./liteserver" ]; then
+        echo -e "\e[1;33m[=]\e[0m Found existing liteserver certificate, skipping"
+    else 
+        echo -e "\e[1;32m[+]\e[0m Generating and installing liteserver certificate for remote control"
+        read -r LITESERVER_ID1 LITESERVER_ID2 <<< $(generate-random-id -m keys -n liteserver)
+        echo "Liteserver IDs: $LITESERVER_ID1 $LITESERVER_ID2"
+        cp liteserver /var/ton-work/db/keyring/$LITESERVER_ID1
+        if [ -z "$LITE_PORT" ]; then
+            LITE_PORT="43679"
+        fi
+        LITESERVERS=$(printf "%q" "\"liteservers\":[{\"id\":\"$LITESERVER_ID2\",\"port\":\"$LITE_PORT\"}")
+        sed -e "s~\"liteservers\"\ \:\ \[~$LITESERVERS~g" config.json > config.json.liteservers
+        mv config.json.liteservers config.json
+        if [[ "$GENESIS" == 1 ]]; then
+          LITESERVER_PUB=$(python -c 'import codecs; f=open("liteserver.pub", "rb+"); pub=f.read()[4:]; print(codecs.encode(pub,"base64").replace("\n",""))')
+          IP=$PUBLIC_IP; IPNUM=0; for (( i=0 ; i<4 ; ++i )); do ((IPNUM=$IPNUM+${IP%%.*}*$((256**$((3-${i})))))); IP=${IP#*.}; done
+          [ $IPNUM -gt $((2**31)) ] && IPNUM=$(($IPNUM - $((2**32))))
+          LITESERVERSCONFIG=$(printf "%q" "\"liteservers\":[{\"id\":{\"key\":\"$LITESERVER_PUB\", \"@type\":\"pub.ed25519\"}, \"port\":\"$LITE_PORT\", \"ip\":$IPNUM }]}")
+          sed -i -e "\$s#\(.*\)\}#\1,$LITESERVERSCONFIG#" my-ton-global.config.json
+          python -c 'import json; f=open("my-ton-global.config.json", "r"); config=json.loads(f.read()); f.close(); f=open("my-ton-global.config.json", "w");f.write(json.dumps(config, indent=2)); f.close()';
+       fi
+    fi
+fi
+

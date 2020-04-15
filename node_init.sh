@@ -34,22 +34,3 @@ else
     mv config.json.new config.json
 fi
 
-# Liteserver
-if [ -z "$LITESERVER" ]; then
-    echo -e "\e[1;33m[=]\e[0m Liteserver disabled"
-else
-    if [ -f "./liteserver" ]; then
-        echo -e "\e[1;33m[=]\e[0m Found existing liteserver certificate, skipping"
-    else 
-        echo -e "\e[1;32m[+]\e[0m Generating and installing liteserver certificate for remote control"
-        read -r LITESERVER_ID1 LITESERVER_ID2 <<< $(generate-random-id -m keys -n liteserver)
-        echo "Liteserver IDs: $LITESERVER_ID1 $LITESERVER_ID2"
-        cp liteserver /var/ton-work/db/keyring/$LITESERVER_ID1
-        if [ -z "$LITE_PORT" ]; then
-            LITE_PORT="43679"
-        fi
-        LITESERVERS=$(printf "%q" "\"liteservers\":[{\"id\":\"$LITESERVER_ID2\",\"port\":\"$LITE_PORT\"}")
-        sed -e "s~\"liteservers\"\ \:\ \[~$LITESERVERS~g" config.json > config.json.liteservers
-        mv config.json.liteservers config.json
-    fi
-fi

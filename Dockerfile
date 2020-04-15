@@ -15,7 +15,7 @@ RUN mkdir build && \
 
 FROM ubuntu:18.04
 RUN apt-get update && \
-	apt-get install -y openssl wget python&& \
+	apt-get install -y openssl wget python nano&& \
 	rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /var/ton-work/db && \
 	mkdir -p /var/ton-work/db/static
@@ -41,6 +41,7 @@ WORKDIR /var/ton-work/contracts
 COPY gen-zerostate.fif ./
 WORKDIR /var/ton-work/db
 COPY ton-private-testnet.config.json.template node_init.sh control.template prepare_network.sh init.sh clean_all.sh example.config.json ./
+ADD validator_scripts /var/ton-work/validator_scripts
 RUN chmod +x node_init.sh prepare_network.sh init.sh clean_all.sh
 
 ENTRYPOINT ["/var/ton-work/db/init.sh"]
