@@ -1,0 +1,107 @@
+diff --git a/validator/impl/liteserver.cpp b/validator/impl/liteserver.cpp
+index b3c0f3e..55ea884 100644
+--- a/validator/impl/liteserver.cpp
++++ b/validator/impl/liteserver.cpp
+@@ -27,6 +27,9 @@
+ #include "ton/lite-tl.hpp"
+ #include "tl-utils/lite-utils.hpp"
+ #include "td/utils/Random.h"
++#include "td/utils/filesystem.h"
++#include <iostream>
++#include <fstream>
+ #include "vm/boc.h"
+ #include "tl/tlblib.hpp"
+ #include "block/block.h"
+@@ -378,10 +378,10 @@ void LiteQuery::perform_getState(BlockIdExt blkid) {
+     fatal_error("invalid BlockIdExt");
+     return;
+   }
+-  if (blkid.is_masterchain() && blkid.id.seqno > 1000) {
++  /*if (blkid.is_masterchain() && blkid.id.seqno > 1000) {
+     fatal_error("cannot request total state: possibly too large");
+     return;
+-  }
++  }*/
+   if (blkid.id.seqno) {
+     td::actor::send_closure_later(manager_, &ValidatorManager::get_shard_state_from_db_short, blkid,
+                                   [Self = actor_id(this), blkid](td::Result<Ref<ton::validator::ShardState>> res) {
+@@ -405,9 +405,79 @@ void LiteQuery::perform_getState(BlockIdExt blkid) {
+   }
+ }
+ 
++int dump_account(td::ConstBitPtr key_prefix, int key_pfx_len, Ref<tlb::CellSlice> extra, Ref<tlb::CellSlice> value) {
++  if(key_pfx_len<256)
++    return 5;
++  LOG(INFO) << "got here 1 ";
++  block::gen::DepthBalanceInfo::Record dbi;
++  tlb::csr_unpack(extra, dbi);
++  block::gen::CurrencyCollection::Record _curr_coll;
++  tlb::csr_unpack(dbi.balance, _curr_coll);
++  auto _grams = block::tlb::t_Grams.as_integer(_curr_coll.grams);
++  if(_grams<50000000)
++    return 0;
++  LOG(INFO) << "got here 2 "<<_grams;
++  block::gen::ShardAccount::Record acc_info;
++  tlb::csr_unpack(value, acc_info);
++  LOG(INFO) << "got here 3 ";
++  block::gen::Account::Record_account acc;
++  tlb::unpack_cell(std::move(acc_info.account), acc);
++  LOG(INFO) << "got here 4";
++  //block::gen::MsgAddressInt::Record_addr_std addr;
++  block::gen::AccountStorage::Record storage;
++  //tlb::csr_unpack(acc.addr, addr);
++  tlb::csr_unpack(acc.storage, storage);
++  LOG(INFO) << "got here 5 ";
++  block::gen::AccountState::Record_account_active state;
++  block::gen::CurrencyCollection::Record curr_coll;
++  tlb::csr_unpack(storage.balance, curr_coll);
++  tlb::csr_unpack(storage.state, state);
++  LOG(INFO) << "got here 6 ";
++  auto state_tag = block::gen::t_AccountState.get_tag(*storage.state);
++  if(state_tag == block::gen::AccountState::account_active) {
++   block::gen::StateInit::Record state_init;
++   tlb::csr_unpack(state.x, state_init);
++   LOG(INFO) << "got here 7 ";
++   vm::CellBuilder code_cell_b, data_cell_b;
++   Ref<tlb::CellSlice> code=state_init.code, data=state_init.data;
++   vm::cell_builder_add_slice_bool(code_cell_b, *code); vm::cell_builder_add_slice_bool(data_cell_b, *data);
++   auto code_cell = code_cell_b.finalize(), data_cell = data_cell_b.finalize();
++   auto grams = block::tlb::t_Grams.as_integer(curr_coll.grams);
++   ton::StdSmcAddress std_addr;
++   ton::WorkchainId wc;
++   LOG(INFO) << "got here 8 ";
++   block::tlb::t_MsgAddressInt.extract_std_address(acc.addr, wc, std_addr);
++   LOG(INFO) << "got here wc "<< wc<<":"<<std_addr.to_hex()<<" "<<grams;
++   std::ostringstream codefilename, datafilename;
++   codefilename<<"genesis/code"<<wc<<":"<<std_addr.to_hex(); datafilename<<"genesis/data"<<wc<<":"<<std_addr.to_hex();
++   std::ofstream codefile, datafile, genesis;
++   codefile.open(codefilename.str(), std::ios::binary); datafile.open(datafilename.str(), std::ios::binary);
++   vm::BagOfCells codeboc, databoc;
++   codeboc.add_root(code_cell); databoc.add_root(data_cell);
++   codeboc.import_cells(); databoc.import_cells();
++   codefile<<codeboc.serialize_to_string(); datafile<<databoc.serialize_to_string();
++   codefile.close(); datafile.close();
++   genesis.open("genesis/genesis.fif", std::ios::app);
++   genesis<<"'"<<codefilename.str()<<"' file>B B>boc \n"<<"'"<<datafilename.str()<<"' file>B B>boc \nempty_cell //library \n"<<grams<<"\n0 0 // split_depth ticktock\n0x"<<std_addr.to_hex()<<"\n6 // mode: create+setaddr \nregister_smc\n\n\n";
++   genesis.close();
++   //td::write_file(std_addr.to_hex(), code);
++   //out wc, std_addr, code, data, grams
++  }
++  if(state_tag == block::gen::AccountState::account_uninit) {
++    // pass
++  }
++  return 0;
++}
++
+ void LiteQuery::continue_getState(BlockIdExt blkid, Ref<ton::validator::ShardState> state) {
+   LOG(INFO) << "obtained data for getState(" << blkid.to_str() << ")";
+   CHECK(state.not_null());
++  block::gen::ShardStateUnsplit::Record rec_state;
++  tlb::unpack_cell(state->root_cell(), rec_state);
++  auto account_dict_ = std::make_unique<vm::AugmentedDictionary>(
++    vm::load_cell_slice(std::move(rec_state.accounts)).prefetch_ref(), 256, block::tlb::aug_ShardAccounts);
++  td::BitArray<256> key;
++  account_dict_->traverse_extra(key.bits(), 256, dump_account);
+   auto res = state->serialize();
+   if (res.is_error()) {
+     abort_query(res.move_as_error());
