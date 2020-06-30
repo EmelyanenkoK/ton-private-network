@@ -82,7 +82,7 @@ index b3c0f3e..55ea884 100644
 +   codefile<<codeboc.serialize_to_string(); datafile<<databoc.serialize_to_string();
 +   codefile.close(); datafile.close();
 +   genesis.open("genesis/genesis.fif", std::ios::app);
-+   genesis<<"'"<<codefilename.str()<<"' file>B B>boc \n"<<"'"<<datafilename.str()<<"' file>B B>boc \nempty_cell //library \n"<<grams<<"\n0 0 // split_depth ticktock\n0x"<<std_addr.to_hex()<<"\n6 // mode: create+setaddr \nregister_smc\n\n\n";
++   genesis<<"'"<<codefilename.str()<<"' file>B B>boc <s ref@\n"<<"'"<<datafilename.str()<<"' file>B B>boc <s ref@\nempty_cell //library \n"<<grams<<"\n0 0 // split_depth ticktock\n0x"<<std_addr.to_hex()<<"\n6 // mode: create+setaddr \nregister_smc\n\n\n";
 +   genesis.close();
 +   //td::write_file(std_addr.to_hex(), code);
 +   //out wc, std_addr, code, data, grams
